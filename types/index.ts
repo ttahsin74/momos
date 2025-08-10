@@ -1,70 +1,100 @@
+// Database Models Types
+export interface Category {
+  category_id: number;
+  category_name: string;
+  category_description?: string;
+  is_active: boolean;
+  created_date: Date;
+}
+
 export interface Restaurant {
-  id: number;
+  restaurant_id: number;
   name: string;
-  rating: number;
-  reviewCount: number;
-  cuisine: string;
-  priceRange: "$" | "$$" | "$$$" | "$$$$";
-  distance: string;
-  address: string;
-  phone: string;
-  hours: string;
-  description: string;
-  imageUrl: string;
-  createdAt?: string;
-  updatedAt?: string;
-  reviews?: Review[];
-  _count?: {
-    reviews: number;
-  };
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  website?: string;
+  hours_operation?: Record<string, string>;
+  price_range?: number; // 1-4 ($-$$$$)
+  average_rating?: number;
+  total_reviews?: number;
+  latitude?: number;
+  longitude?: number;
+  is_verified: boolean;
+  created_date: Date;
+  updated_date?: Date;
+  is_active: boolean;
+}
+
+export interface User {
+  user_id: number;
+  username: string;
+  email: string;
+  password_hash: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  is_verified: boolean;
+  created_date: Date;
+  last_login?: Date;
+  is_active: boolean;
 }
 
 export interface Review {
-  id: number;
-  restaurantId: number;
-  userName: string;
-  rating: number;
-  date: string;
-  title: string;
-  text: string;
-  helpful: number;
-  photos?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  restaurant?: {
-    name: string;
-    imageUrl: string;
-  };
+  review_id: number;
+  user_id: number;
+  restaurant_id: number;
+  rating: number; // 1-5
+  review_title?: string;
+  review_text?: string;
+  is_recommended?: boolean;
+  moderation_status?: "pending" | "approved" | "rejected";
+  created_date: Date;
+  updated_date?: Date;
+  is_active: boolean;
+}
+
+// API Request Types
+export interface CreateRestaurantRequest {
+  name: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  website?: string;
+  hours_operation?: Record<string, string>;
+  price_range?: number;
+  latitude?: number;
+  longitude?: number;
+  category_ids?: number[];
 }
 
 export interface CreateReviewRequest {
-  restaurantId: number;
-  userName: string;
+  restaurant_id: number;
   rating: number;
-  title: string;
-  text: string;
-  photos?: string[];
+  review_title?: string;
+  review_text?: string;
+  is_recommended?: boolean;
 }
 
-export interface CreateRestaurantRequest {
-  name: string;
-  cuisine: string;
-  priceRange: "$" | "$$" | "$$$" | "$$$$";
-  distance: string;
-  address: string;
-  phone: string;
-  hours: string;
-  description: string;
-  imageUrl: string;
-  rating?: number;
+export interface CreateUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
 }
 
-export interface AppStats {
-  totalRestaurants: number;
-  totalReviews: number;
-  averageRating: number;
-  topCuisines: {
-    cuisine: string;
-    count: number;
-  }[];
+export interface SearchFilters {
+  search?: string;
+  city?: string;
+  state?: string;
+  category_id?: number;
+  price_range?: number;
+  min_rating?: number;
+  is_verified?: boolean;
 }

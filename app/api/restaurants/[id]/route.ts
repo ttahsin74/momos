@@ -16,11 +16,36 @@ export async function GET(
       );
     }
 
-    const restaurant = await prisma.restaurant.findUnique({
-      where: { id },
+    const restaurant = await prisma.restaurants.findUnique({
+      where: { restaurant_id: id },
       include: {
         reviews: {
-          orderBy: { createdAt: "desc" },
+          orderBy: { created_date: "desc" },
+          include: {
+            user: {
+              select: {
+                user_id: true,
+                username: true,
+                first_name: true,
+                last_name: true,
+              },
+            },
+          },
+        },
+        restaurantCategories: {
+          include: {
+            category: true,
+          },
+        },
+        photos: {
+          where: { is_active: true },
+          orderBy: { created_date: "desc" },
+        },
+        _count: {
+          select: {
+            reviews: true,
+            favorites: true,
+          },
         },
       },
     });
@@ -32,7 +57,6 @@ export async function GET(
       );
     }
 
-    // No need to parse photos for PostgreSQL arrays
     return NextResponse.json(restaurant);
   } catch (error) {
     console.error("Error fetching restaurant:", error);
@@ -59,9 +83,12 @@ export async function PUT(
       );
     }
 
-    const restaurant = await prisma.restaurant.update({
-      where: { id },
-      data: body,
+    const restaurant = await prisma.restaurants.update({
+      where: { restaurant_id: id },
+      data: {
+        ...body,
+        updated_date: new Date(),
+      },
     });
 
     return NextResponse.json(restaurant);
@@ -89,8 +116,8 @@ export async function DELETE(
       );
     }
 
-    await prisma.restaurant.delete({
-      where: { id },
+    await prisma.restaurants.delete({
+      where: { restaurant_id: id },
     });
 
     return NextResponse.json({ message: "Restaurant deleted successfully" });

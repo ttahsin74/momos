@@ -5,28 +5,49 @@ import { prisma } from "@/lib/prisma";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const restaurantId = searchParams.get("restaurantId");
+    const restaurant_id = searchParams.get("restaurant_id");
+    const user_id = searchParams.get("user_id");
+    const min_rating = searchParams.get("min_rating");
 
-    const where: any = {};
+    const where: any = {
+      is_active: true,
+    };
 
-    if (restaurantId) {
-      where.restaurantId = parseInt(restaurantId);
+    if (restaurant_id) {
+      where.restaurant_id = parseInt(restaurant_id);
     }
 
-    const reviews = await prisma.review.findMany({
+    if (user_id) {
+      where.user_id = parseInt(user_id);
+    }
+
+    if (min_rating) {
+      where.rating = {
+        gte: parseInt(min_rating),
+      };
+    }
+
+    const reviews = await prisma.reviews.findMany({
       where,
       include: {
         restaurant: {
           select: {
+            restaurant_id: true,
             name: true,
-            imageUrl: true,
+          },
+        },
+        user: {
+          select: {
+            user_id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { created_date: "desc" },
     });
 
-    // No need to parse photos for PostgreSQL arrays
     return NextResponse.json(reviews);
   } catch (error) {
     console.error("Error fetching reviews:", error);
@@ -43,50 +64,71 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    if (
-      !body.restaurantId ||
-      !body.userName ||
-      !body.rating ||
-      !body.title ||
-      !body.text
-    ) {
+    if (!body.restaurant_id || !body.user_id || !body.rating) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields: restaurant_id, user_id, rating" },
+        { status: 400 }
+      );
+    }
+
+    // Validate rating range
+    if (body.rating < 1 || body.rating > 5) {
+      return NextResponse.json(
+        { error: "Rating must be between 1 and 5" },
         { status: 400 }
       );
     }
 
     // Create the review
-    const review = await prisma.review.create({
+    const review = await prisma.reviews.create({
       data: {
-        restaurantId: parseInt(body.restaurantId),
-        userName: body.userName,
+        restaurant_id: parseInt(body.restaurant_id),
+        user_id: parseInt(body.user_id),
         rating: parseInt(body.rating),
-        date: new Date().toISOString().split("T")[0], // YYYY-MM-DD format
-        title: body.title,
-        text: body.text,
-        helpful: 0,
-        photos: body.photos || [],
+        review_title: body.review_title || null,
+        review_text: body.review_text || null,
+        is_recommended: body.is_recommended || null,
+        moderation_status: "approved", // Default to approved
+      },
+      include: {
+        restaurant: {
+          select: {
+            restaurant_id: true,
+            name: true,
+          },
+        },
+        user: {
+          select: {
+            user_id: true,
+            username: true,
+            first_name: true,
+            last_name: true,
+          },
+        },
       },
     });
 
     // Update restaurant's average rating and review count
-    const reviews = await prisma.review.findMany({
-      where: { restaurantId: parseInt(body.restaurantId) },
-    });
-
-    const avgRating =
-      reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
-
-    await prisma.restaurant.update({
-      where: { id: parseInt(body.restaurantId) },
-      data: {
-        rating: Math.round(avgRating * 10) / 10, // Round to 1 decimal place
-        reviewCount: reviews.length,
+    const allReviews = await prisma.reviews.findMany({
+      where: {
+        restaurant_id: parseInt(body.restaurant_id),
+        is_active: true,
       },
     });
 
-    // Return review - no need to parse photos for PostgreSQL arrays
+    const avgRating =
+      allReviews.length > 0
+        ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+        : 0;
+
+    await prisma.restaurants.update({
+      where: { restaurant_id: parseInt(body.restaurant_id) },
+      data: {
+        average_rating: Math.round(avgRating * 100) / 100, // Round to 2 decimal places
+        total_reviews: allReviews.length,
+      },
+    });
+
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
     console.error("Error creating review:", error);

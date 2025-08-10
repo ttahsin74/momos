@@ -1,49 +1,77 @@
 import { PrismaClient } from "@prisma/client";
-import { restaurants, reviews } from "../data/mockData";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Seeding database...");
+  console.log("🌱 Seeding database with new schema...");
 
-  // Create restaurants
-  for (const restaurant of restaurants) {
-    await prisma.restaurant.upsert({
-      where: { id: restaurant.id },
+  // Create categories
+  const categories = [
+    {
+      category_name: "Fast Food",
+      category_description: "Quick service restaurants",
+    },
+    {
+      category_name: "Fine Dining",
+      category_description: "Upscale restaurants",
+    },
+    {
+      category_name: "Casual Dining",
+      category_description: "Family-friendly restaurants",
+    },
+    { category_name: "Italian", category_description: "Italian cuisine" },
+    { category_name: "Mexican", category_description: "Mexican cuisine" },
+    { category_name: "Asian", category_description: "Asian cuisine" },
+    { category_name: "American", category_description: "American cuisine" },
+  ];
+
+  for (const category of categories) {
+    await prisma.categories.upsert({
+      where: { category_id: categories.indexOf(category) + 1 },
       update: {},
       create: {
-        id: restaurant.id,
-        name: restaurant.name,
-        rating: restaurant.rating,
-        reviewCount: restaurant.reviewCount,
-        cuisine: restaurant.cuisine,
-        priceRange: restaurant.priceRange,
-        distance: restaurant.distance,
-        address: restaurant.address,
-        phone: restaurant.phone,
-        hours: restaurant.hours,
-        description: restaurant.description,
-        imageUrl: restaurant.imageUrl,
+        category_id: categories.indexOf(category) + 1,
+        ...category,
       },
     });
   }
 
-  // Create reviews
-  for (const review of reviews) {
-    await prisma.review.upsert({
-      where: { id: review.id },
+  // Create test users
+  const users = [
+    {
+      user_id: 1,
+      username: "john_doe",
+      email: "john@example.com",
+      password_hash: "$2b$10$hash", // In real app, properly hash passwords
+      first_name: "John",
+      last_name: "Doe",
+      is_verified: true,
+    },
+    {
+      user_id: 2,
+      username: "jane_smith",
+      email: "jane@example.com",
+      password_hash: "$2b$10$hash",
+      first_name: "Jane",
+      last_name: "Smith",
+      is_verified: true,
+    },
+    {
+      user_id: 3,
+      username: "mike_johnson",
+      email: "mike@example.com",
+      password_hash: "$2b$10$hash",
+      first_name: "Mike",
+      last_name: "Johnson",
+      is_verified: true,
+    },
+  ];
+
+  for (const user of users) {
+    await prisma.users.upsert({
+      where: { email: user.email },
       update: {},
-      create: {
-        id: review.id,
-        restaurantId: review.restaurantId,
-        userName: review.userName,
-        rating: review.rating,
-        date: review.date,
-        title: review.title,
-        text: review.text,
-        helpful: review.helpful,
-        photos: review.photos || [],
-      },
+      create: user,
     });
   }
 

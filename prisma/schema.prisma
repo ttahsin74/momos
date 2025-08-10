@@ -10,43 +10,129 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Restaurant {
-  id          Int      @id @default(autoincrement())
-  name        String
-  rating      Float
-  reviewCount Int      @default(0)
-  cuisine     String
-  priceRange  String   // '$', '$$', '$$$', '$$$$'
-  distance    String
-  address     String
-  phone       String
-  hours       String
-  description String
-  imageUrl    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relationships
-  reviews     Review[]
-  
-  @@map("restaurants")
+model Categories {
+  category_id          Int                  @id @default(autoincrement())
+  category_name        String
+  category_description String?
+  is_active            Boolean              @default(true)
+  created_date         DateTime             @default(now())
+
+  restaurantCategories RestaurantCategories[]
 }
 
-model Review {
-  id           Int      @id @default(autoincrement())
-  restaurantId Int
-  userName     String
-  rating       Int
-  date         String
-  title        String
-  text         String
-  helpful      Int      @default(0)
-  photos       String[] // Array of photo URLs
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  // Relationships
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
-  
-  @@map("reviews")
+model Restaurants {
+  restaurant_id   Int                  @id @default(autoincrement())
+  name            String
+  description     String?
+  address         String?
+  city            String?
+  state           String?
+  zip_code        String?
+  website         String?
+  hours_operation Json?
+  price_range     Int?
+  average_rating  Decimal?
+  total_reviews   Int? 
+  latitude        Decimal?
+  longitude       Decimal?
+  is_verified     Boolean              @default(false)
+  created_date    DateTime             @default(now())
+  updated_date    DateTime? 
+  is_active       Boolean              @default(true)
+
+  restaurantCategories RestaurantCategories[]
+  reviews              Reviews[]
+  favorites            Favorites[]
+  restaurantResponses  RestaurantResponses[]
+  photos               Photos[]
+}
+
+model Users {
+  user_id       Int        @id @default(autoincrement())
+  username      String
+  email         String     @unique
+  password_hash String
+  first_name    String?
+  last_name     String?
+  phone         String?
+  is_verified   Boolean    @default(false)
+  created_date  DateTime   @default(now())
+  last_login    DateTime?
+  is_active     Boolean    @default(true)
+
+  reviews   Reviews[]
+  favorites Favorites[]
+  photos    Photos[]
+}
+
+model Reviews {
+  review_id         Int        @id @default(autoincrement())
+  user_id           Int
+  restaurant_id     Int
+  rating            Int
+  review_title      String?
+  review_text       String?
+  is_recommended    Boolean? 
+  moderation_status String?
+  created_date      DateTime   @default(now())
+  updated_date      DateTime?
+  is_active         Boolean    @default(true)
+
+  user       Users      @relation(fields: [user_id], references: [user_id])
+  restaurant Restaurants @relation(fields: [restaurant_id], references: [restaurant_id])
+  photos     Photos[]
+  responses  RestaurantResponses[]
+}
+
+model Favorites {
+  favorite_id   Int        @id @default(autoincrement())
+  user_id       Int
+  restaurant_id Int
+  created_date  DateTime   @default(now())
+
+  user       Users      @relation(fields: [user_id], references: [user_id])
+  restaurant Restaurants @relation(fields: [restaurant_id], references: [restaurant_id])
+}
+
+model Photos {
+  photo_id         Int        @id @default(autoincrement())
+  user_id          Int
+  restaurant_id    Int
+  review_id        Int?
+  photo_url        String
+  caption          String?
+  file_name        String?
+  file_size        Int?
+  moderation_status String?
+  created_date     DateTime   @default(now())
+  is_active        Boolean    @default(true)
+
+  user       Users      @relation(fields: [user_id], references: [user_id])
+  restaurant Restaurants @relation(fields: [restaurant_id], references: [restaurant_id])
+  review     Reviews?   @relation(fields: [review_id], references: [review_id])
+}
+
+model RestaurantCategories {
+  restaurant_id Int
+  category_id   Int
+  is_primary    Boolean    @default(false)
+  created_date  DateTime   @default(now())
+
+  restaurant Restaurants @relation(fields: [restaurant_id], references: [restaurant_id])
+  category   Categories  @relation(fields: [category_id], references: [category_id])
+
+  @@id([restaurant_id, category_id])
+}
+
+model RestaurantResponses {
+  response_id   Int        @id @default(autoincrement())
+  restaurant_id Int
+  review_id     Int
+  owner_name    String?
+  response_text String?
+  created_date  DateTime   @default(now())
+  is_active     Boolean    @default(true)
+
+  restaurant Restaurants @relation(fields: [restaurant_id], references: [restaurant_id])
+  review     Reviews     @relation(fields: [review_id], references: [review_id])
 }

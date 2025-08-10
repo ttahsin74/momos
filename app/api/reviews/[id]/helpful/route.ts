@@ -13,16 +13,14 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid review ID" }, { status: 400 });
     }
 
-    const review = await prisma.review.update({
-      where: { id },
-      data: {
-        helpful: {
-          increment: 1,
-        },
-      },
-    });
+    // Note: The current schema doesn't have a helpful_count field in Reviews
+    // We would need to add this field to the schema or track it differently
+    // For now, let's return an error indicating this feature isn't implemented
 
-    return NextResponse.json({ helpful: review.helpful });
+    return NextResponse.json(
+      { error: "Helpful count feature not implemented in current schema" },
+      { status: 501 }
+    );
   } catch (error) {
     console.error("Error updating helpful count:", error);
     return NextResponse.json(

@@ -3,7 +3,6 @@ import {
   Review,
   CreateRestaurantRequest,
   CreateReviewRequest,
-  AppStats,
 } from "@/types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
@@ -126,7 +125,7 @@ export const reviewApi = {
 // Stats API functions
 export const statsApi = {
   // Get application statistics
-  get: (): Promise<AppStats> => {
+  get: (): Promise<any> => {
     return apiFetch(`/stats`);
   },
 };
