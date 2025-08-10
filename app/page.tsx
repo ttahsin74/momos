@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 export default function Home() {
   return (
@@ -141,7 +142,22 @@ export default function Home() {
               </Link>
             ))}
           </div>
+
+          <section className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-20 mt-16 rounded-3xl overflow-hidden">
+            <div className="max-w-6xl mx-auto px-4">
+              <h2 className="text-4xl font-bold mb-6">
+                Welcome to Memos Tonight
+              </h2>
+              <p className="text-xl text-gray-300 mb-8">
+                Discover and share amazing memories with friends and family
+              </p>
+              <button className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg text-lg transition-colors">
+                Get Started
+              </button>
+            </div>
+          </section>
         </main>
+        <Footer />
       </div>
     </>
   );
